@@ -28,9 +28,15 @@ if(navigator.geolocation)
     function(position) {
       const {latitude} = position.coords
       const {longitude}  = position.coords
-      console.log(latitude, longitude);
-      console.log(position);
-      console.log(`https://www.google.com/maps/@${latitude}.${longitude}`);
+      const coords = [latitude, longitude]
+      const map = L.map('map').setView(coords, 13);
+      L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      L.marker(coords).addTo(map)
+      .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+      .openPopup();
     },
     function() {
       alert("Вы не предоставили доступ к своей локации")
