@@ -25,46 +25,58 @@ const inputElevation = document.querySelector(".form__input--elevation");
 let map
 let mapEvent
 
-if(navigator.geolocation)
-  navigator.geolocation.getCurrentPosition(
-    function(position) {
+class App {
+  _map
+  _mapEvent
+  constructor() {
+    this._getPosition()
+    form.addEventListener("submit", this._newWorkout.bind(this))
+    inputType.addEventListener("change", this._toggleField.bind(this))
+  }
+  _getPosition() {
+    if(navigator.geolocation)
+  navigator.geolocation.getCurrentPosition(this._loadMap.bind(this),
+    function() {
+      alert("Вы не предоставили доступ к своей локации")
+    })
+  }
+  _loadMap(position) {
+
       const {latitude} = position.coords
       const {longitude}  = position.coords
       const coords = [latitude, longitude]
-      map = L.map('map').setView(coords, 13);
+      this._map = L.map('map').setView(coords, 13);
 
       L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
+      }).addTo(this._map);
 
-      map.on('click', function(mapE) {
-        mapEvent = mapE
-        form.classList.remove("hidden");
-        inputDistance.focus();
-    },
-    function() {
-      alert("Вы не предоставили доступ к своей локации")
-    }
-  )
+      this._map.on('click', this._showForm.bind(this))
+  }
+  _showForm(mapE) {
+      this._mapEvent = mapE
+      form.classList.remove("hidden");
+      inputDistance.focus();
+  }
+  _toggleField() {
+    inputCadence.closest('.form__row').classList.toggle('form__row--hidden')
+    inputElevation.closest('.form__row').classList.toggle('form__row--hidden')
+  }
+  _newWorkout(e) {
+    e.preventDefault();
+    inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = ''
+    const {lat, lng} = this._mapEvent.latlng
+    L.marker([lat, lng]).addTo(this._map)
+    .bindPopup(L.popup({
+      maxWidth: 250,
+      minWidth: 100,
+      autoClose: false,
+      closeOnClick: false,
+      className: 'mark-popup'
+    }))
+    .setPopupContent('Тренировка')
+    .openPopup();
+  }
+}
 
-form.addEventListener("submit", function(e) {
-  e.preventDefault();
-  inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = ''
-  const {lat, lng} = mapEvent.latlng
-  L.marker([lat, lng]).addTo(map)
-  .bindPopup(L.popup({
-    maxWidth: 250,
-    minWidth: 100,
-    autoClose: false,
-    closeOnClick: false,
-    className: 'mark-popup'
-  }))
-  .setPopupContent('Тренировка')
-  .openPopup();
-  })
-})
-
-inputType.addEventListener("change", function() {
-  inputCadence.closest('.form__row').classList.toggle('form__row--hidden')
-  inputElevation.closest('.form__row').classList.toggle('form__row--hidden')
-})
+const app = new App();
