@@ -55,7 +55,12 @@ class App {
   _mapEvent
   _workouts = []
   constructor() {
+    // Запуск логики приложения
     this._getPosition()
+
+    // Получение данных из LS
+    this._getLocalStorage()
+
     form.addEventListener("submit", this._newWorkout.bind(this))
     inputType.addEventListener("change", this._toggleField.bind(this))
     containerWorkouts.addEventListener("click", this._moveToPopup.bind(this))
@@ -79,6 +84,10 @@ class App {
       }).addTo(this._map);
 
       this._map.on('click', this._showForm.bind(this))
+
+      this._workouts.forEach(work => {
+        this._renderWorkMarker(work)
+      })
   }
   _showForm(mapE) {
       this._mapEvent = mapE
@@ -126,6 +135,8 @@ class App {
     this._renderWorkout(workout)
     // очистить поля ввода и спрятать форму
     this._hideForm()
+
+    this._setLocalStorage()
   }
   _renderWorkMarker(workout) {
     L.marker(workout.coords).addTo(this._map)
@@ -185,7 +196,7 @@ class App {
           <span class="workout__value">${workout.elevation}</span>
           <span class="workout__unit">м</span>
         </div>
-      </li> -->
+      </li>
       `
     }
     form.insertAdjacentHTML('afterend', html)
@@ -201,6 +212,25 @@ class App {
       }
     })
   }
+
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this._workouts))
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'))
+    if(!data) return
+    this._workouts = data
+    this._workouts.forEach(work => {
+      this._renderWorkout(work)
+    })
+  }
+
+  reset() {
+    localStorage.removeItem('workouts')
+    location.reload()
+  }
 }
 
+// Запуск приложения
 const app = new App();
